@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react';
-import { analyzeSlope } from './api';
+import { analyzeSlope, isApiUrlConfigured } from './api';
 import { predictLandPrice } from './services/predictionService';
 import PredictionCard from './components/PredictionCard';
 
@@ -80,6 +80,11 @@ function App() {
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? 'bg-[#111827] text-white' : 'bg-white text-slate-900'}`}>
       <div className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 px-4 py-4 backdrop-blur-xl transition dark:border-slate-800 dark:bg-[#111827]/90 sm:px-6 lg:px-8">
+        {!isApiUrlConfigured && (
+          <div className="mb-4 rounded-[1rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-950 dark:bg-red-950/70 dark:text-red-200">
+            API base URL is not configured. Set <code className="font-mono">VITE_API_URL=https://slope-4.onrender.com</code> in Render environment variables.
+          </div>
+        )}
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className={`flex h-11 w-11 items-center justify-center rounded-3xl ${isDark ? 'bg-orange-500/15' : 'bg-orange-50'}`}>
