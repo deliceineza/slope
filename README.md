@@ -31,6 +31,10 @@
 
 ## What it does
 
+- Shows a login screen before the assessment tool
+- Demo login:
+  - Username: `admin`
+  - Password: `admin123`
 - Frontend sends a POST request to `http://localhost:8000/analyze`
 - Backend returns permit status and land value
 - Frontend displays results in responsive cards
