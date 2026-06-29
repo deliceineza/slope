@@ -29,9 +29,14 @@ def compute_adjusted_weight(weight: float, slope: float) -> float:
 
 
 def identify_parcel_location(longitude: float, latitude: float) -> Dict[str, str]:
-    district = "Gasabo" if latitude > -2 else "Kicukiro"
-    sector = "Kacyiru" if longitude > 30 else "Gisozi"
-    cell = "Kimihurura" if latitude > -1.95 else "Nyamirambo"
+    district = "Bugesera"
+    sector = "Nyamata"
+
+    if 30.055 <= longitude <= 30.065 and -1.948 <= latitude <= -1.938:
+        cell = "Nyamata Central"
+    else:
+        cell = "Ruhuha"
+
     boundaries = f"{district} District · {sector} Sector · {cell} Cell"
     return {
         "district": district,

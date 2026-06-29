@@ -1,9 +1,8 @@
 import os
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
 
 from routes.predict import router as predict_router
 from services.predict_service import load_model
@@ -32,21 +31,6 @@ class SlopeRequest(BaseModel):
     slope: float
 
  
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
-
-DEMO_USERNAME = "admin"
-DEMO_PASSWORD = "admin123"
-DEMO_TOKEN = "slope-demo-token"
-
-
-def verify_token(authorization: Optional[str]):
-    if authorization != f"Bearer {DEMO_TOKEN}":
-        raise HTTPException(status_code=401, detail="Invalid or missing token")
-
-
 # Home route (fixes "Not Found")
 @app.get("/")
 def home():
@@ -56,23 +40,9 @@ def home():
     }
 
 
-@app.post("/login")
-def login(data: LoginRequest):
-    if data.username == DEMO_USERNAME and data.password == DEMO_PASSWORD:
-        return {
-            "message": "Login successful",
-            "token": DEMO_TOKEN,
-            "username": data.username
-        }
-
-    raise HTTPException(status_code=401, detail="Invalid username or password")
-
-
 # Main analysis endpoint
 @app.post("/analyze")
-def analyze(data: SlopeRequest, authorization: Optional[str] = Header(default=None)):
-    verify_token(authorization)
-
+def analyze(data: SlopeRequest):
     slope = data.slope
 
     if slope <= 15:

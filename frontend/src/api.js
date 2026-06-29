@@ -7,17 +7,8 @@ const api = axios.create({
   },
 });
 
-export const loginUser = async (username, password) => {
-  const response = await api.post('/login', { username, password });
-  return response.data;
-};
-
-export const analyzeSlope = async (slope, token) => {
-  const response = await api.post('/analyze', { slope }, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export const analyzeSlope = async (slope) => {
+  const response = await api.post('/analyze', { slope });
   return response.data;
 };
 

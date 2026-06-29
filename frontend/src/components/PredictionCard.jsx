@@ -16,7 +16,7 @@ const progressSteps = [
   'Generating explanation...',
 ];
 
-const PredictionCard = ({ token, onPredict }) => {
+const PredictionCard = ({ onPredict }) => {
   const [longitude, setLongitude] = useState(30.0588);
   const [latitude, setLatitude] = useState(-1.9441);
   const [coordinateSystem, setCoordinateSystem] = useState('WGS84');
@@ -98,7 +98,7 @@ const PredictionCard = ({ token, onPredict }) => {
         households: DEFAULT_HOUSEHOLDS,
       };
 
-      const response = await onPredict(payload, token);
+      const response = await onPredict(payload);
       setResult(response);
       setProgress(response.steps ?? progressSteps);
       setActiveStep(progressSteps.length);

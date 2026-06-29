@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react';
-import { analyzeSlope, loginUser } from './api';
+import { analyzeSlope } from './api';
 import { predictLandPrice } from './services/predictionService';
 import PredictionCard from './components/PredictionCard';
 
@@ -24,11 +24,6 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [theme, setTheme] = useState('light');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [token, setToken] = useState(() => window.localStorage.getItem('authToken') || '');
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
   const analyzeRef = useRef(null);
 
   const isDark = theme === 'dark';
@@ -66,50 +61,13 @@ function App() {
 
     setLoading(true);
     try {
-      const data = await analyzeSlope(numericSlope, token);
+      const data = await analyzeSlope(numericSlope);
       setResult(data);
     } catch (err) {
-      if (err.response?.status === 401) {
-        window.localStorage.removeItem('authToken');
-        setToken('');
-        setError('');
-        setLoginError('Please log in again.');
-      } else {
-        setError('Analysis failed.');
-      }
+      setError('Analysis failed.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogin = async (event) => {
-    event.preventDefault();
-    setLoginError('');
-
-    if (!username.trim() || !password) {
-      setLoginError('Enter username and password.');
-      return;
-    }
-
-    setLoginLoading(true);
-    try {
-      const data = await loginUser(username.trim(), password);
-      window.localStorage.setItem('authToken', data.token);
-      setToken(data.token);
-      setPassword('');
-    } catch (err) {
-      setLoginError('Invalid username or password.');
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    window.localStorage.removeItem('authToken');
-    setToken('');
-    setResult(null);
-    setSlope('');
-    setError('');
   };
 
   const displayValue = (value) => (value ?? 'N/A');
@@ -118,69 +76,6 @@ function App() {
   const slopeValue = result?.slope ?? slope;
   const statusClass = getPermitStyle(permitStatus);
 
-  if (!token) {
-    return (
-      <div className={`min-h-screen transition-colors duration-500 ${isDark ? 'bg-[#111827] text-white' : 'bg-white text-slate-900'}`}>
-        <div className="flex min-h-screen items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md card sm:p-10">
-            <div className="mb-8 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.35em] text-orange-500">Land Assessment</p>
-                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#1F2937] dark:text-white">Login</h1>
-              </div>
-              <button
-                type="button"
-                onClick={() => setTheme(isDark ? 'light' : 'dark')}
-                className={`inline-flex h-11 w-11 items-center justify-center rounded-full text-lg transition ${isDark ? 'bg-slate-900 text-white shadow-sm shadow-black/30 hover:bg-slate-800' : 'bg-white text-slate-900 shadow-sm hover:bg-slate-50'}`}
-                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                <span>{theme === 'light' ? '☀️' : '🌙'}</span>
-              </button>
-            </div>
-
-            <form onSubmit={handleLogin} className="grid gap-4">
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-[#1F2937] dark:text-slate-100">Username</span>
-                <input
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  type="text"
-                  autoComplete="username"
-                  placeholder="admin"
-                  className={`w-full rounded-[0.75rem] border px-5 py-4 text-base outline-none transition ${isDark ? 'border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 focus:border-orange-500' : 'border-slate-200 bg-white text-slate-900 placeholder:text-[#6B7280] focus:border-orange-500'}`}
-                />
-              </label>
-              <label className="grid gap-2">
-                <span className="text-sm font-semibold text-[#1F2937] dark:text-slate-100">Password</span>
-                <input
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="admin123"
-                  className={`w-full rounded-[0.75rem] border px-5 py-4 text-base outline-none transition ${isDark ? 'border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 focus:border-orange-500' : 'border-slate-200 bg-white text-slate-900 placeholder:text-[#6B7280] focus:border-orange-500'}`}
-                />
-              </label>
-
-              {loginError && (
-                <div className="rounded-[1rem] bg-red-50 px-5 py-4 text-sm text-red-700 dark:bg-red-950 dark:text-red-200">
-                  {loginError}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loginLoading}
-                className="mt-2 inline-flex min-h-[56px] items-center justify-center rounded-[1rem] bg-gradient-to-r from-[#F97316] via-[#FB923C] to-[#FDBA74] px-8 text-base font-semibold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {loginLoading ? 'Logging in...' : 'Login'}
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? 'bg-[#111827] text-white' : 'bg-white text-slate-900'}`}>
@@ -203,13 +98,6 @@ function App() {
             >
               <span>{theme === 'light' ? '☀️' : '🌙'}</span>
               <span>{theme === 'light' ? 'Light' : 'Dark'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition ${isDark ? 'bg-slate-900 text-white shadow-sm shadow-black/30 hover:bg-slate-800' : 'bg-white text-slate-900 shadow-sm hover:bg-slate-50'}`}
-            >
-              Logout
             </button>
           </div>
         </div>
@@ -300,7 +188,7 @@ function App() {
         </section>
 
         <section className="mt-16">
-          <PredictionCard token={token} onPredict={predictLandPrice} />
+          <PredictionCard onPredict={predictLandPrice} />
         </section>
 
         <section className="mt-16 grid gap-6 md:grid-cols-2">
