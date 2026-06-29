@@ -5,6 +5,18 @@ const PredictionResult = ({ result }) => {
     return null;
   }
 
+  const safeNumber = (value) => {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  };
+
+  const formattedPrice = (() => {
+    const price = safeNumber(result.predicted_price ?? result.estimated_price);
+    return price === null ? 'Prediction unavailable' : `${price.toLocaleString()} FRW/sqm`;
+  })();
+
+  const generatedAt = result.timestamp ? new Date(result.timestamp).toLocaleString() : 'Unknown';
+
   return (
     <div className="space-y-4 rounded-[1.25rem] border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <div className="flex items-center justify-between">
@@ -14,7 +26,7 @@ const PredictionResult = ({ result }) => {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-3xl bg-slate-50 p-5 dark:bg-slate-800">
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Estimated Price</p>
-          <p className="mt-3 text-3xl font-semibold text-slate-900 dark:text-white">{Number(result.predicted_price).toLocaleString()} FRW/sqm</p>
+          <p className="mt-3 text-3xl font-semibold text-slate-900 dark:text-white">{formattedPrice}</p>
         </div>
         <div className="grid gap-3">
           <div className="rounded-3xl bg-slate-50 p-5 dark:bg-slate-800">
@@ -23,7 +35,7 @@ const PredictionResult = ({ result }) => {
           </div>
           <div className="rounded-3xl bg-slate-50 p-5 dark:bg-slate-800">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Generated</p>
-            <p className="mt-3 text-base font-semibold text-slate-900 dark:text-white">{new Date(result.timestamp).toLocaleString()}</p>
+            <p className="mt-3 text-base font-semibold text-slate-900 dark:text-white">{generatedAt}</p>
           </div>
         </div>
       </div>

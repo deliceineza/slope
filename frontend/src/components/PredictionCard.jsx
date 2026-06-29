@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import SlopeSlider from './SlopeSlider';
 import PredictionProgress from './PredictionProgress';
 import PredictionSummary from './PredictionSummary';
 import PredictionExplanation from './PredictionExplanation';
@@ -17,10 +16,9 @@ const progressSteps = [
 ];
 
 const PredictionCard = ({ onPredict }) => {
-  const [longitude, setLongitude] = useState(30.0588);
-  const [latitude, setLatitude] = useState(-1.9441);
+  const [longitude, setLongitude] = useState(511966.35);
+  const [latitude, setLatitude] = useState(4766797.64);
   const [coordinateSystem, setCoordinateSystem] = useState('WGS84');
-  const [slope, setSlope] = useState(12);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -34,6 +32,12 @@ const PredictionCard = ({ onPredict }) => {
   const DEFAULT_WEIGHT = 1.0;
   const DEFAULT_POPULATION = 1800;
   const DEFAULT_HOUSEHOLDS = 420;
+  const DEFAULT_SLOPE = 12;
+
+  const safeNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  };
 
   const stopProgress = () => {
     if (progressTimerRef.current) {
@@ -90,7 +94,7 @@ const PredictionCard = ({ onPredict }) => {
       const payload = {
         longitude: Number(longitude),
         latitude: Number(latitude),
-        slope: Number(slope),
+        slope: DEFAULT_SLOPE,
         area: DEFAULT_AREA,
         year: DEFAULT_YEAR,
         weight: DEFAULT_WEIGHT,
@@ -99,17 +103,30 @@ const PredictionCard = ({ onPredict }) => {
       };
 
       const response = await onPredict(payload);
-      setResult(response);
+      const prediction = response.prediction || {};
+      const predictedPrice = safeNumber(prediction.predicted_price ?? prediction.estimated_price);
+      const parcelValue = safeNumber(prediction.parcel_value) ?? (predictedPrice !== null ? safeNumber(predictedPrice * payload.area) : null);
+      const normalizedPrediction = {
+        ...prediction,
+        predicted_price: predictedPrice,
+        estimated_price: predictedPrice,
+        parcel_value: parcelValue,
+      };
+      const normalizedResult = {
+        ...response,
+        prediction: normalizedPrediction,
+      };
+
+      setResult(normalizedResult);
       setProgress(response.steps ?? progressSteps);
       setActiveStep(progressSteps.length);
 
-      const prediction = response.prediction || {};
       const historyEntry = {
-        id: prediction.timestamp || new Date().toISOString(),
-        price: prediction.estimated_price,
-        parcelValue: prediction.parcel_value,
-        status: prediction.status,
-        timestamp: prediction.timestamp || new Date().toISOString(),
+        id: normalizedPrediction.timestamp || new Date().toISOString(),
+        price: normalizedPrediction.estimated_price,
+        parcelValue: normalizedPrediction.parcel_value,
+        status: normalizedPrediction.status || 'Prediction unavailable',
+        timestamp: normalizedPrediction.timestamp || new Date().toISOString(),
       };
       setHistory((prev) => [historyEntry, ...prev].slice(0, 5));
     } catch (err) {
@@ -125,28 +142,30 @@ const PredictionCard = ({ onPredict }) => {
       <div className="space-y-2">
         <p className="text-sm font-semibold uppercase tracking-[0.35em] text-orange-500">Land Price Prediction</p>
         <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">Predict an estimated land price</h3>
-        <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">Use location, slope, and local metrics to estimate land value with a step-by-step AI valuation workflow.</p>
+        <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">Use location and local metrics to estimate land value with a step-by-step AI valuation workflow.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="grid gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-2 text-sm text-slate-700 dark:text-slate-200">
-            <span>Longitude</span>
+            <span>X (Easting)</span>
             <input
               value={longitude}
               onChange={(event) => setLongitude(event.target.value)}
               type="number"
               step="0.0001"
+              placeholder="511966.35"
               className="w-full rounded-[1rem] border border-slate-200 bg-white px-4 py-3 text-base outline-none transition dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
           </label>
           <label className="space-y-2 text-sm text-slate-700 dark:text-slate-200">
-            <span>Latitude</span>
+            <span>Y (Northing)</span>
             <input
               value={latitude}
               onChange={(event) => setLatitude(event.target.value)}
               type="number"
               step="0.0001"
+              placeholder="4766797.64"
               className="w-full rounded-[1rem] border border-slate-200 bg-white px-4 py-3 text-base outline-none transition dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
           </label>
@@ -165,10 +184,6 @@ const PredictionCard = ({ onPredict }) => {
               <option value="Local">Local</option>
             </select>
           </label>
-          <div className="space-y-2 text-sm text-slate-700 dark:text-slate-200">
-            <span className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Slope</span>
-            <SlopeSlider value={slope} onChange={setSlope} />
-          </div>
         </div>
 
         <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
